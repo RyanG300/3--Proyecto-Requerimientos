@@ -136,7 +136,7 @@ const Register = () => {
               <p className="text-red-500 text-xs mt-1">{errors.cedula}</p>
             )}
             <p className="text-xs text-gray-500 mt-1">
-              Cédula costarricense de 10 dígitos
+              Cédula costarricense 
             </p>
           </div>
 

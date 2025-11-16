@@ -3,11 +3,11 @@ export const validarCedula = (cedula) => {
   // Remover espacios y guiones
   const cedulaLimpia = cedula.replace(/[\s-]/g, '');
   
-  // Verificar que tenga exactamente 10 dígitos
-  if (!/^\d{10}$/.test(cedulaLimpia)) {
+  // Verificar que tenga exactamente 9 dígitos
+  if (!/^\d{9}$/.test(cedulaLimpia)) {
     return {
       valid: false,
-      error: 'La cédula debe tener exactamente 10 dígitos'
+      error: 'La cédula debe tener exactamente 9 dígitos'
     };
   }
 
@@ -76,5 +76,5 @@ export const formatearCedula = (cedula) => {
   if (cedulaLimpia.length <= 5) {
     return `${cedulaLimpia.slice(0, 1)}-${cedulaLimpia.slice(1)}`;
   }
-  return `${cedulaLimpia.slice(0, 1)}-${cedulaLimpia.slice(1, 5)}-${cedulaLimpia.slice(5, 9)}`;
+  return `${cedulaLimpia.slice(0, 1)}-${cedulaLimpia.slice(1, 5)}-${cedulaLimpia.slice(5)}`;
 };

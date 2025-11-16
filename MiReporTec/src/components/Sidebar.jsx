@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -6,10 +7,19 @@ import { useAuth } from '../context/AuthContext';
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
+  const handleMenuClick = (itemName) => {
+    if (itemName === 'Crear Reporte') {
+      navigate('/crear-reporte');
+    } else if (itemName === 'Reportes' && user) {
+      navigate('/mis-reportes');
+    }
+    setIsOpen(false);
+  };
   
   const menuItems = [
-    { name: 'Reportes', icon: '📋' },
+    ...(user ? [{ name: 'Reportes', icon: '📋' }] : []),
     { name: 'Anuncios', icon: '📢' },
     { name: 'Tags', icon: '🏷️' },
     ...(user ? [{ name: 'Crear Reporte', icon: '➕', highlight: true }] : [])
@@ -49,6 +59,7 @@ const Sidebar = () => {
           {menuItems.map((item, index) => (
             <button
               key={index}
+              onClick={() => handleMenuClick(item.name)}
               className={`
                 w-full text-left px-4 py-3 rounded-lg
                 flex items-center space-x-3

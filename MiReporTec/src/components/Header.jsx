@@ -7,7 +7,7 @@ const Header = () => {
   const navigate = useNavigate();
 
   return (
-    <header className="bg-linear-to-r from-blue-800 to-blue-600 shadow-lg sticky top-0 z-50">
+    <header className="bg-linear-to-r from-blue-800 to-blue-600 shadow-lg sticky top-0 z-[1000]">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
