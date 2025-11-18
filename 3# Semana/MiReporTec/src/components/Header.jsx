@@ -15,7 +15,7 @@ const Header = () => {
             <img 
               src="/images/iconos/Logo_MiReporTec.png" 
               alt="MiReporTec Logo" 
-              className="h-12 w-auto md:h-14 lg:h-16 object-contain rounded-lg"
+              className="h-12 w-auto md:h-14 lg:h-16 object-contain"
             />
             <h1 className="text-white text-xl md:text-2xl font-bold hidden sm:block">
               MiReporTec

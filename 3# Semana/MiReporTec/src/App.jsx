@@ -1,0 +1,58 @@
+import React from 'react';
+import { useAuth } from './context/AuthContext';
+import Header from './components/Header';
+import Sidebar from './components/Sidebar';
+import SearchBar from './components/SearchBar';
+import ReportsSection from './components/ReportsSection';
+
+function App() {
+  const { loading } = useAuth();
+
+  // Mostrar loading mientras verifica sesión
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <Header />
+
+      {/* Main Layout */}
+      <div className="flex">
+        {/* Sidebar */}
+        <Sidebar />
+
+        {/* Main Content Area */}
+        <main className="flex-1 p-4 md:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Page Title */}
+            <div className="mb-6">
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                Reportes Ciudadanos
+              </h2>
+              <p className="text-gray-600">
+                Consulta y crea reportes sobre el estado de la obra pública en tu comunidad
+              </p>
+            </div>
+
+            {/* Search Bar */}
+            <SearchBar />
+
+            {/* Reports Section */}
+            <ReportsSection />
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export default App;
