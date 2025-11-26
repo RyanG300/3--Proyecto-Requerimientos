@@ -106,12 +106,17 @@ const MyReports = () => {
                 >
                   <div className="flex flex-col md:flex-row">
                     {/* Imagen */}
-                    <div className="md:w-48 h-48 bg-gray-200 shrink-0">
+                    <div className="md:w-48 h-48 bg-gray-200 shrink-0 relative">
                       <img 
-                        src={report.foto} 
+                        src={report.fotos?.[0] || report.foto} 
                         alt="Reporte" 
                         className="w-full h-full object-cover"
                       />
+                      {report.fotos && report.fotos.length > 1 && (
+                        <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                          +{report.fotos.length - 1}
+                        </div>
+                      )}
                     </div>
 
                     {/* Contenido */}

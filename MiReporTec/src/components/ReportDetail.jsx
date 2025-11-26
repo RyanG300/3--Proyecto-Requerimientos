@@ -87,26 +87,56 @@ const ReportDetail = () => {
             </div>
           </div>
 
-          {/* Foto */}
-          <div className="w-full h-96 bg-gray-200">
-            <img 
-              src={report.foto} 
-              alt="Reporte" 
-              className="w-full h-full object-contain"
-            />
+          {/* Fotos */}
+          <div className="w-full bg-gray-200">
+            {report.fotos && report.fotos.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 p-2">
+                {report.fotos.map((foto, index) => (
+                  <img 
+                    key={index}
+                    src={foto} 
+                    alt={`Reporte ${index + 1}`}
+                    className="w-full h-64 object-cover rounded"
+                  />
+                ))}
+              </div>
+            ) : (
+              <img 
+                src={report.foto} 
+                alt="Reporte" 
+                className="w-full h-96 object-contain"
+              />
+            )}
           </div>
 
           {/* Contenido */}
           <div className="p-6 space-y-6">
             {/* Descripción */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                Descripción
-              </h3>
-              <p className="text-gray-700 leading-relaxed">
-                {report.descripcion}
-              </p>
-            </div>
+            {report.descripcion && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  Descripción
+                </h3>
+                <p className="text-gray-700 leading-relaxed">
+                  {report.descripcion}
+                </p>
+              </div>
+            )}
+
+            {/* Audio */}
+            {report.audio && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  Audio de la Descripción
+                </h3>
+                <div className="p-4 bg-gray-50 border border-gray-300 rounded-md">
+                  <audio controls className="w-full">
+                    <source src={report.audio} />
+                    Tu navegador no soporta el elemento de audio.
+                  </audio>
+                </div>
+              </div>
+            )}
 
             {/* Tags */}
             {report.tags && report.tags.length > 0 && (

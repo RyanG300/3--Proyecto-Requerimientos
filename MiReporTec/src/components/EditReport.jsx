@@ -10,12 +10,13 @@ const EditReport = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     descripcion: '',
-    foto: null,
+    audio: null,
+    fotos: [],
     tags: []
   });
   const [originalReport, setOriginalReport] = useState(null);
   const [tagInput, setTagInput] = useState('');
-  const [fotoPreview, setFotoPreview] = useState(null);
+  const [tipoDescripcion, setTipoDescripcion] = useState('texto');
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -39,12 +40,14 @@ const EditReport = () => {
     }
 
     setOriginalReport(report);
+    const hasAudio = report.audio && report.audio !== null;
+    setTipoDescripcion(hasAudio ? 'audio' : 'texto');
     setFormData({
-      descripcion: report.descripcion,
-      foto: report.foto,
+      descripcion: report.descripcion || '',
+      audio: report.audio || null,
+      fotos: report.fotos || (report.foto ? [report.foto] : []),
       tags: report.tags || []
     });
-    setFotoPreview(report.foto);
   }, [id, user, navigate]);
 
   const handleChange = (e) => {
@@ -55,21 +58,80 @@ const EditReport = () => {
     }
   };
 
-  const handleFotoChange = (e) => {
+  const handleFotosChange = (e) => {
+    const files = Array.from(e.target.files);
+    
+    if (files.length === 0) return;
+
+    if (formData.fotos.length + files.length > 5) {
+      setErrors(prev => ({ ...prev, fotos: 'Máximo 5 imágenes permitidas' }));
+      return;
+    }
+
+    const invalidFiles = files.filter(file => file.size > 5 * 1024 * 1024);
+    if (invalidFiles.length > 0) {
+      setErrors(prev => ({ ...prev, fotos: 'Cada imagen no debe superar 5MB' }));
+      return;
+    }
+
+    const promises = files.map(file => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(promises).then(results => {
+      setFormData(prev => ({ 
+        ...prev, 
+        fotos: [...prev.fotos, ...results] 
+      }));
+      setErrors(prev => ({ ...prev, fotos: '' }));
+    });
+  };
+
+  const handleRemoveFoto = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      fotos: prev.fotos.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleAudioChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors(prev => ({ ...prev, foto: 'La foto no debe superar 5MB' }));
+      if (file.size > 10 * 1024 * 1024) {
+        setErrors(prev => ({ ...prev, audio: 'El audio no debe superar 10MB' }));
+        return;
+      }
+
+      if (!file.type.startsWith('audio/')) {
+        setErrors(prev => ({ ...prev, audio: 'Solo se permiten archivos de audio' }));
         return;
       }
 
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, foto: reader.result }));
-        setFotoPreview(reader.result);
+        setFormData(prev => ({ ...prev, audio: reader.result }));
+        setErrors(prev => ({ ...prev, audio: '' }));
       };
       reader.readAsDataURL(file);
-      setErrors(prev => ({ ...prev, foto: '' }));
+    }
+  };
+
+  const handleRemoveAudio = () => {
+    setFormData(prev => ({ ...prev, audio: null }));
+  };
+
+  const handleTipoDescripcionChange = (tipo) => {
+    setTipoDescripcion(tipo);
+    if (tipo === 'texto') {
+      setFormData(prev => ({ ...prev, audio: null }));
+      setErrors(prev => ({ ...prev, audio: '' }));
+    } else {
+      setFormData(prev => ({ ...prev, descripcion: '' }));
+      setErrors(prev => ({ ...prev, descripcion: '' }));
     }
   };
 
@@ -97,12 +159,16 @@ const EditReport = () => {
 
     const newErrors = {};
     
-    if (!formData.descripcion.trim()) {
+    if (tipoDescripcion === 'texto' && !formData.descripcion.trim()) {
       newErrors.descripcion = 'La descripción es requerida';
     }
 
-    if (!formData.foto) {
-      newErrors.foto = 'Debes mantener una foto del problema';
+    if (tipoDescripcion === 'audio' && !formData.audio) {
+      newErrors.audio = 'Debes mantener un audio';
+    }
+
+    if (formData.fotos.length === 0) {
+      newErrors.fotos = 'Debes mantener al menos una foto del problema';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -111,8 +177,9 @@ const EditReport = () => {
     }
 
     const updatedData = {
-      descripcion: formData.descripcion,
-      foto: formData.foto,
+      descripcion: tipoDescripcion === 'texto' ? formData.descripcion : '',
+      audio: tipoDescripcion === 'audio' ? formData.audio : null,
+      fotos: formData.fotos,
       tags: formData.tags
     };
 
@@ -147,51 +214,138 @@ const EditReport = () => {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Descripción */}
+            {/* Selector de Tipo de Descripción */}
             <div>
-              <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-1">
-                Descripción del Problema *
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                ¿Cómo deseas describir el problema? *
               </label>
-              <textarea
-                id="descripcion"
-                name="descripcion"
-                value={formData.descripcion}
-                onChange={handleChange}
-                rows="4"
-                placeholder="Describe el problema que estás reportando..."
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.descripcion ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.descripcion && (
-                <p className="text-red-500 text-xs mt-1">{errors.descripcion}</p>
-              )}
+              <div className="flex gap-4">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="tipoDescripcion"
+                    value="texto"
+                    checked={tipoDescripcion === 'texto'}
+                    onChange={(e) => handleTipoDescripcionChange(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span className="text-gray-700">📝 Texto</span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="tipoDescripcion"
+                    value="audio"
+                    checked={tipoDescripcion === 'audio'}
+                    onChange={(e) => handleTipoDescripcionChange(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span className="text-gray-700">🎤 Audio</span>
+                </label>
+              </div>
             </div>
 
-            {/* Foto */}
+            {/* Descripción de Texto */}
+            {tipoDescripcion === 'texto' && (
+              <div>
+                <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-1">
+                  Descripción del Problema *
+                </label>
+                <textarea
+                  id="descripcion"
+                  name="descripcion"
+                  value={formData.descripcion}
+                  onChange={handleChange}
+                  rows="4"
+                  placeholder="Describe el problema que estás reportando..."
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.descripcion ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                />
+                {errors.descripcion && (
+                  <p className="text-red-500 text-xs mt-1">{errors.descripcion}</p>
+                )}
+              </div>
+            )}
+
+            {/* Audio */}
+            {tipoDescripcion === 'audio' && (
+              <div>
+                <label htmlFor="audio" className="block text-sm font-medium text-gray-700 mb-1">
+                  Audio del Problema * (Máximo 10MB)
+                </label>
+                <input
+                  type="file"
+                  id="audio"
+                  accept="audio/*"
+                  onChange={handleAudioChange}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.audio ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                />
+                {errors.audio && (
+                  <p className="text-red-500 text-xs mt-1">{errors.audio}</p>
+                )}
+                {formData.audio && (
+                  <div className="mt-3 p-3 bg-gray-50 border border-gray-300 rounded-md">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-gray-700 font-medium">🎧 Audio adjunto</span>
+                      <button
+                        type="button"
+                        onClick={handleRemoveAudio}
+                        className="text-red-600 hover:text-red-800 text-sm font-medium"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                    <audio controls className="w-full">
+                      <source src={formData.audio} />
+                      Tu navegador no soporta el elemento de audio.
+                    </audio>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Fotos */}
             <div>
-              <label htmlFor="foto" className="block text-sm font-medium text-gray-700 mb-1">
-                Foto del Problema *
+              <label htmlFor="fotos" className="block text-sm font-medium text-gray-700 mb-1">
+                Fotos del Problema * (Máximo 5)
               </label>
               <input
                 type="file"
-                id="foto"
+                id="fotos"
                 accept="image/*"
-                onChange={handleFotoChange}
+                multiple
+                onChange={handleFotosChange}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.foto ? 'border-red-500' : 'border-gray-300'
+                  errors.fotos ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
-              {errors.foto && (
-                <p className="text-red-500 text-xs mt-1">{errors.foto}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.fotos.length}/5 imágenes seleccionadas
+              </p>
+              {errors.fotos && (
+                <p className="text-red-500 text-xs mt-1">{errors.fotos}</p>
               )}
-              {fotoPreview && (
-                <div className="mt-3">
-                  <img 
-                    src={fotoPreview} 
-                    alt="Preview" 
-                    className="max-w-full h-48 object-cover rounded-md border border-gray-300"
-                  />
+              {formData.fotos.length > 0 && (
+                <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {formData.fotos.map((foto, index) => (
+                    <div key={index} className="relative group">
+                      <img 
+                        src={foto} 
+                        alt={`Preview ${index + 1}`} 
+                        className="w-full h-32 object-cover rounded-md border border-gray-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFoto(index)}
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

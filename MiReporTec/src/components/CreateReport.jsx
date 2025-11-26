@@ -10,12 +10,16 @@ const CreateReport = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     descripcion: '',
-    foto: null,
+    audio: null,
+    fotos: [],
     ubicacion: null,
     tags: []
   });
   const [tagInput, setTagInput] = useState('');
-  const [fotoPreview, setFotoPreview] = useState(null);
+  const [tipoDescripcion, setTipoDescripcion] = useState('texto'); // 'texto' o 'audio'
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [recordingTime, setRecordingTime] = useState(0);
   const [errors, setErrors] = useState({});
 
   // Redirigir si no hay usuario
@@ -32,23 +36,124 @@ const CreateReport = () => {
     }
   };
 
-  const handleFotoChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Validar tamaño (máximo 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors(prev => ({ ...prev, foto: 'La foto no debe superar 5MB' }));
-        return;
-      }
+  const handleFotosChange = (e) => {
+    const files = Array.from(e.target.files);
+    
+    if (files.length === 0) return;
 
-      // Convertir a base64 para guardar en localStorage
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, foto: reader.result }));
-        setFotoPreview(reader.result);
+    // Validar que no supere 5 imágenes
+    if (formData.fotos.length + files.length > 5) {
+      setErrors(prev => ({ ...prev, fotos: 'Máximo 5 imágenes permitidas' }));
+      return;
+    }
+
+    // Validar tamaño de cada archivo (máximo 5MB)
+    const invalidFiles = files.filter(file => file.size > 5 * 1024 * 1024);
+    if (invalidFiles.length > 0) {
+      setErrors(prev => ({ ...prev, fotos: 'Cada imagen no debe superar 5MB' }));
+      return;
+    }
+
+    // Convertir todas las imágenes a base64
+    const promises = files.map(file => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(promises).then(results => {
+      setFormData(prev => ({ 
+        ...prev, 
+        fotos: [...prev.fotos, ...results] 
+      }));
+      setErrors(prev => ({ ...prev, fotos: '' }));
+    });
+  };
+
+  const handleRemoveFoto = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      fotos: prev.fotos.filter((_, i) => i !== index)
+    }));
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
       };
-      reader.readAsDataURL(file);
-      setErrors(prev => ({ ...prev, foto: '' }));
+
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setFormData(prev => ({ ...prev, audio: reader.result }));
+          setErrors(prev => ({ ...prev, audio: '' }));
+        };
+        reader.readAsDataURL(blob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      // Contador de tiempo
+      const interval = setInterval(() => {
+        setRecordingTime(prev => {
+          if (prev >= 300) { // Máximo 5 minutos
+            stopRecording();
+            clearInterval(interval);
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+
+      recorder.interval = interval;
+    } catch (error) {
+      console.error('Error al acceder al micrófono:', error);
+      setErrors(prev => ({ ...prev, audio: 'No se pudo acceder al micrófono' }));
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+      if (mediaRecorder.interval) {
+        clearInterval(mediaRecorder.interval);
+      }
+      setIsRecording(false);
+    }
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleRemoveAudio = () => {
+    setFormData(prev => ({ ...prev, audio: null }));
+  };
+
+  const handleTipoDescripcionChange = (tipo) => {
+    setTipoDescripcion(tipo);
+    if (tipo === 'texto') {
+      setFormData(prev => ({ ...prev, audio: null }));
+      setErrors(prev => ({ ...prev, audio: '' }));
+    } else {
+      setFormData(prev => ({ ...prev, descripcion: '' }));
+      setErrors(prev => ({ ...prev, descripcion: '' }));
     }
   };
 
@@ -82,12 +187,16 @@ const CreateReport = () => {
     // Validaciones
     const newErrors = {};
     
-    if (!formData.descripcion.trim()) {
+    if (tipoDescripcion === 'texto' && !formData.descripcion.trim()) {
       newErrors.descripcion = 'La descripción es requerida';
     }
 
-    if (!formData.foto) {
-      newErrors.foto = 'Debes subir una foto del problema';
+    if (tipoDescripcion === 'audio' && !formData.audio) {
+      newErrors.audio = 'Debes grabar o subir un audio';
+    }
+
+    if (formData.fotos.length === 0) {
+      newErrors.fotos = 'Debes subir al menos una foto del problema';
     }
 
     if (!formData.ubicacion) {
@@ -104,8 +213,9 @@ const CreateReport = () => {
       id: generateId(),
       cedula: user.cedula,
       nombreUsuario: user.nombre,
-      descripcion: formData.descripcion,
-      foto: formData.foto,
+      descripcion: tipoDescripcion === 'texto' ? formData.descripcion : '',
+      audio: tipoDescripcion === 'audio' ? formData.audio : null,
+      fotos: formData.fotos,
       ubicacion: formData.ubicacion,
       tags: formData.tags,
       fechaCreacion: new Date().toISOString(),
@@ -138,51 +248,168 @@ const CreateReport = () => {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Descripción */}
+            {/* Selector de Tipo de Descripción */}
             <div>
-              <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-1">
-                Descripción del Problema *
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                ¿Cómo deseas describir el problema? *
               </label>
-              <textarea
-                id="descripcion"
-                name="descripcion"
-                value={formData.descripcion}
-                onChange={handleChange}
-                rows="4"
-                placeholder="Describe el problema que estás reportando..."
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.descripcion ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.descripcion && (
-                <p className="text-red-500 text-xs mt-1">{errors.descripcion}</p>
-              )}
+              <div className="flex gap-4">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="tipoDescripcion"
+                    value="texto"
+                    checked={tipoDescripcion === 'texto'}
+                    onChange={(e) => handleTipoDescripcionChange(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span className="text-gray-700">📝 Texto</span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="tipoDescripcion"
+                    value="audio"
+                    checked={tipoDescripcion === 'audio'}
+                    onChange={(e) => handleTipoDescripcionChange(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span className="text-gray-700">🎤 Audio</span>
+                </label>
+              </div>
             </div>
 
-            {/* Foto */}
+            {/* Descripción de Texto */}
+            {tipoDescripcion === 'texto' && (
+              <div>
+                <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-1">
+                  Descripción del Problema *
+                </label>
+                <textarea
+                  id="descripcion"
+                  name="descripcion"
+                  value={formData.descripcion}
+                  onChange={handleChange}
+                  rows="4"
+                  placeholder="Describe el problema que estás reportando..."
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.descripcion ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                />
+                {errors.descripcion && (
+                  <p className="text-red-500 text-xs mt-1">{errors.descripcion}</p>
+                )}
+              </div>
+            )}
+
+            {/* Audio */}
+            {tipoDescripcion === 'audio' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Graba tu Audio * (Máximo 5 minutos)
+                </label>
+                
+                {!formData.audio ? (
+                  <div className="p-6 border-2 border-dashed border-gray-300 rounded-lg text-center">
+                    {!isRecording ? (
+                      <div>
+                        <div className="mb-4">
+                          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span className="text-3xl">🎤</span>
+                          </div>
+                          <p className="text-gray-600 mb-4">Haz clic para comenzar a grabar</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={startRecording}
+                          className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold shadow-md"
+                        >
+                          ● Iniciar Grabación
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="mb-4">
+                          <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-3 animate-pulse">
+                            <span className="text-3xl text-white">🎤</span>
+                          </div>
+                          <p className="text-gray-800 font-semibold text-xl mb-2">Grabando...</p>
+                          <p className="text-gray-600 text-lg font-mono">{formatTime(recordingTime)}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={stopRecording}
+                          className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition font-semibold shadow-md"
+                        >
+                          ■ Detener Grabación
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-4 bg-gray-50 border border-gray-300 rounded-md">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm text-gray-700 font-medium">🎧 Audio grabado</span>
+                      <button
+                        type="button"
+                        onClick={handleRemoveAudio}
+                        className="text-red-600 hover:text-red-800 text-sm font-medium"
+                      >
+                        × Eliminar y grabar de nuevo
+                      </button>
+                    </div>
+                    <audio controls className="w-full">
+                      <source src={formData.audio} />
+                      Tu navegador no soporta el elemento de audio.
+                    </audio>
+                  </div>
+                )}
+                
+                {errors.audio && (
+                  <p className="text-red-500 text-xs mt-2">{errors.audio}</p>
+                )}
+              </div>
+            )}
+
+            {/* Fotos */}
             <div>
-              <label htmlFor="foto" className="block text-sm font-medium text-gray-700 mb-1">
-                Foto del Problema *
+              <label htmlFor="fotos" className="block text-sm font-medium text-gray-700 mb-1">
+                Fotos del Problema * (Máximo 5)
               </label>
               <input
                 type="file"
-                id="foto"
+                id="fotos"
                 accept="image/*"
-                onChange={handleFotoChange}
+                multiple
+                onChange={handleFotosChange}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.foto ? 'border-red-500' : 'border-gray-300'
+                  errors.fotos ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
-              {errors.foto && (
-                <p className="text-red-500 text-xs mt-1">{errors.foto}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.fotos.length}/5 imágenes seleccionadas
+              </p>
+              {errors.fotos && (
+                <p className="text-red-500 text-xs mt-1">{errors.fotos}</p>
               )}
-              {fotoPreview && (
-                <div className="mt-3">
-                  <img 
-                    src={fotoPreview} 
-                    alt="Preview" 
-                    className="max-w-full h-48 object-cover rounded-md border border-gray-300"
-                  />
+              {formData.fotos.length > 0 && (
+                <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {formData.fotos.map((foto, index) => (
+                    <div key={index} className="relative group">
+                      <img 
+                        src={foto} 
+                        alt={`Preview ${index + 1}`} 
+                        className="w-full h-32 object-cover rounded-md border border-gray-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFoto(index)}
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

@@ -27,12 +27,17 @@ const ReportCard = ({ report }) => {
       className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden cursor-pointer"
     >
       {/* Imagen */}
-      <div className="h-48 overflow-hidden bg-gray-200">
+      <div className="h-48 overflow-hidden bg-gray-200 relative">
         <img 
-          src={report.foto} 
+          src={report.fotos?.[0] || report.foto} 
           alt="Reporte" 
           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
         />
+        {report.fotos && report.fotos.length > 1 && (
+          <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+            +{report.fotos.length - 1} fotos
+          </div>
+        )}
       </div>
 
       {/* Contenido */}
