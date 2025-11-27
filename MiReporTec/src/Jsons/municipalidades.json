@@ -1,0 +1,128 @@
+{
+  "municipalidades": [
+    {
+      "provincia": "Alajuela",
+      "municipalidades": [
+        { "nombre": "Municipalidad de Alajuela", "ubicacion": { "canton": "Alajuela" } },
+        { "nombre": "Municipalidad de Atenas", "ubicacion": { "canton": "Atenas" } },
+        { "nombre": "Municipalidad de Grecia", "ubicacion": { "canton": "Grecia" } },
+        { "nombre": "Municipalidad de Guatuso", "ubicacion": { "canton": "Guatuso" } },
+        { "nombre": "Municipalidad de Los Chiles", "ubicacion": { "canton": "Los Chiles" } },
+        { "nombre": "Municipalidad de Río Cuarto", "ubicacion": { "canton": "Río Cuarto" } },
+        { "nombre": "Municipalidad de San Carlos", "ubicacion": { "canton": "San Carlos" } },
+        { "nombre": "Municipalidad de San Mateo", "ubicacion": { "canton": "San Mateo" } },
+        { "nombre": "Municipalidad de San Ramón", "ubicacion": { "canton": "San Ramón" } },
+        { "nombre": "Municipalidad de Sarchí", "ubicacion": { "canton": "Sarchí" } },
+        { "nombre": "Municipalidad de Naranjo", "ubicacion": { "canton": "Naranjo" } },
+        { "nombre": "Municipalidad de Orotina", "ubicacion": { "canton": "Orotina" } },
+        { "nombre": "Municipalidad de Palmares", "ubicacion": { "canton": "Palmares" } },
+        { "nombre": "Municipalidad de Poás", "ubicacion": { "canton": "Poás" } },
+        { "nombre": "Municipalidad de Upala", "ubicacion": { "canton": "Upala" } },
+        { "nombre": "Municipalidad de Zarcero", "ubicacion": { "canton": "Zarcero" } },
+        { "nombre": "Concejo Municipal de San Isidro de Peñas Blancas", "ubicacion": { "canton": "San Ramón", "distrito": "Peñas Blancas" } }
+      ]
+    },
+    {
+      "provincia": "Cartago",
+      "municipalidades": [
+        { "nombre": "Municipalidad de Alvarado", "ubicacion": { "canton": "Alvarado" } },
+        { "nombre": "Municipalidad de Cartago", "ubicacion": { "canton": "Cartago" } },
+        { "nombre": "Municipalidad de El Guarco", "ubicacion": { "canton": "El Guarco" } },
+        { "nombre": "Municipalidad de Jiménez", "ubicacion": { "canton": "Jiménez" } },
+        { "nombre": "Municipalidad de La Unión", "ubicacion": { "canton": "La Unión" } },
+        { "nombre": "Municipalidad de Oreamuno", "ubicacion": { "canton": "Oreamuno" } },
+        { "nombre": "Municipalidad de Paraíso", "ubicacion": { "canton": "Paraíso" } },
+        { "nombre": "Municipalidad de Turrialba", "ubicacion": { "canton": "Turrialba" } },
+        { "nombre": "Concejo Municipal de Cervantes", "ubicacion": { "canton": "Alvarado", "distrito": "Cervantes" } },
+        { "nombre": "Concejo Municipal de Tucurrique", "ubicacion": { "canton": "Jiménez", "distrito": "Tucurrique" } }
+      ]
+    },
+    {
+      "provincia": "Guanacaste",
+      "municipalidades": [
+        { "nombre": "Municipalidad de Abangares", "ubicacion": { "canton": "Abangares" } },
+        { "nombre": "Municipalidad de Bagaces", "ubicacion": { "canton": "Bagaces" } },
+        { "nombre": "Municipalidad de Cañas", "ubicacion": { "canton": "Cañas" } },
+        { "nombre": "Municipalidad de Carrillo", "ubicacion": { "canton": "Carrillo" } },
+        { "nombre": "Concejo Municipal de Colorado", "ubicacion": { "canton": "Abangares", "distrito": "Colorado" } },
+        { "nombre": "Municipalidad de La Cruz", "ubicacion": { "canton": "La Cruz" } },
+        { "nombre": "Municipalidad de Liberia", "ubicacion": { "canton": "Liberia" } },
+        { "nombre": "Municipalidad de Nandayure", "ubicacion": { "canton": "Nandayure" } },
+        { "nombre": "Municipalidad de Nicoya", "ubicacion": { "canton": "Nicoya" } },
+        { "nombre": "Municipalidad de Santa Cruz", "ubicacion": { "canton": "Santa Cruz" } },
+        { "nombre": "Municipalidad de Hojancha", "ubicacion": { "canton": "Hojancha" } },
+        { "nombre": "Municipalidad de Tilarán", "ubicacion": { "canton": "Tilarán" } }
+      ]
+    },
+    {
+      "provincia": "Heredia",
+      "municipalidades": [
+        { "nombre": "Municipalidad de Barva", "ubicacion": { "canton": "Barva" } },
+        { "nombre": "Municipalidad de Belén", "ubicacion": { "canton": "Belén" } },
+        { "nombre": "Municipalidad de Flores", "ubicacion": { "canton": "Flores" } },
+        { "nombre": "Municipalidad de Heredia", "ubicacion": { "canton": "Heredia" } },
+        { "nombre": "Municipalidad de San Isidro", "ubicacion": { "canton": "San Isidro" } },
+        { "nombre": "Municipalidad de San Pablo", "ubicacion": { "canton": "San Pablo" } },
+        { "nombre": "Municipalidad de San Rafael", "ubicacion": { "canton": "San Rafael" } },
+        { "nombre": "Municipalidad de Santa Bárbara", "ubicacion": { "canton": "Santa Bárbara" } },
+        { "nombre": "Municipalidad de Santo Domingo", "ubicacion": { "canton": "Santo Domingo" } },
+        { "nombre": "Municipalidad de Sarapiquí", "ubicacion": { "canton": "Sarapiquí" } }
+      ]
+    },
+    {
+      "provincia": "Limón",
+      "municipalidades": [
+        { "nombre": "Municipalidad de Guácimo", "ubicacion": { "canton": "Guácimo" } },
+        { "nombre": "Municipalidad de Limón", "ubicacion": { "canton": "Limón" } },
+        { "nombre": "Municipalidad de Matina", "ubicacion": { "canton": "Matina" } },
+        { "nombre": "Municipalidad de Pococí", "ubicacion": { "canton": "Pococí" } },
+        { "nombre": "Municipalidad de Siquirres", "ubicacion": { "canton": "Siquirres" } },
+        { "nombre": "Municipalidad de Talamanca", "ubicacion": { "canton": "Talamanca" } }
+      ]
+    },
+    {
+      "provincia": "Puntarenas",
+      "municipalidades": [
+        { "nombre": "Municipalidad de Buenos Aires", "ubicacion": { "canton": "Buenos Aires" } },
+        { "nombre": "Municipalidad de Corredores", "ubicacion": { "canton": "Corredores" } },
+        { "nombre": "Municipalidad de Coto Brus", "ubicacion": { "canton": "Coto Brus" } },
+        { "nombre": "Municipalidad de Esparza", "ubicacion": { "canton": "Esparza" } },
+        { "nombre": "Municipalidad de Garabito", "ubicacion": { "canton": "Garabito" } },
+        { "nombre": "Municipalidad de Osa", "ubicacion": { "canton": "Osa" } },
+        { "nombre": "Municipalidad de Parrita", "ubicacion": { "canton": "Parrita" } },
+        { "nombre": "Municipalidad de Puntarenas", "ubicacion": { "canton": "Puntarenas" } },
+        { "nombre": "Municipalidad de Quepos", "ubicacion": { "canton": "Quepos" } },
+        { "nombre": "Concejo Municipal de Cóbano", "ubicacion": { "canton": "Puntarenas", "distrito": "Cóbano" } },
+        { "nombre": "Municipalidad de Montes de Oro", "ubicacion": { "canton": "Montes de Oro" } },
+        { "nombre": "Municipalidad de Monteverde", "ubicacion": { "canton": "Monteverde" } },
+        { "nombre": "Concejo Municipal de Lepanto", "ubicacion": { "canton": "Puntarenas", "distrito": "Lepanto" } },
+        { "nombre": "Concejo Municipal de Paquera", "ubicacion": { "canton": "Puntarenas", "distrito": "Paquera" } }
+      ]
+    },
+    {
+      "provincia": "San José",
+      "municipalidades": [
+        { "nombre": "Municipalidad de Acosta", "ubicacion": { "canton": "Acosta" } },
+        { "nombre": "Municipalidad de Alajuelita", "ubicacion": { "canton": "Alajuelita" } },
+        { "nombre": "Municipalidad de Aserrí", "ubicacion": { "canton": "Aserrí" } },
+        { "nombre": "Municipalidad de Curridabat", "ubicacion": { "canton": "Curridabat" } },
+        { "nombre": "Municipalidad de Desamparados", "ubicacion": { "canton": "Desamparados" } },
+        { "nombre": "Municipalidad de Mora", "ubicacion": { "canton": "Mora" } },
+        { "nombre": "Municipalidad de Moravia", "ubicacion": { "canton": "Moravia" } },
+        { "nombre": "Municipalidad de Pérez Zeledón", "ubicacion": { "canton": "Pérez Zeledón" } },
+        { "nombre": "Municipalidad de Puriscal", "ubicacion": { "canton": "Puriscal" } },
+        { "nombre": "Municipalidad de San José", "ubicacion": { "canton": "San José" } },
+        { "nombre": "Municipalidad de Dota", "ubicacion": { "canton": "Dota" } },
+        { "nombre": "Municipalidad de Escazú", "ubicacion": { "canton": "Escazú" } },
+        { "nombre": "Municipalidad de Goicoechea", "ubicacion": { "canton": "Goicoechea" } },
+        { "nombre": "Municipalidad de León Cortés", "ubicacion": { "canton": "León Cortés" } },
+        { "nombre": "Municipalidad de Montes de Oca", "ubicacion": { "canton": "Montes de Oca" } },
+        { "nombre": "Municipalidad de Santa Ana", "ubicacion": { "canton": "Santa Ana" } },
+        { "nombre": "Municipalidad de Tarrazú", "ubicacion": { "canton": "Tarrazú" } },
+        { "nombre": "Municipalidad de Tibás", "ubicacion": { "canton": "Tibás" } },
+        { "nombre": "Municipalidad de Turrubares", "ubicacion": { "canton": "Turrubares" } },
+        { "nombre": "Municipalidad de Vázquez de Coronado", "ubicacion": { "canton": "Vázquez de Coronado" } }
+      ]
+    }
+  ]
+}

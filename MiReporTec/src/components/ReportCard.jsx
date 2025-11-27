@@ -52,9 +52,16 @@ const ReportCard = ({ report }) => {
           </span>
         </div>
 
+        {/* Municipalidad */}
+        {report.municipalidad && (
+          <div className="mb-2 flex items-center text-xs text-gray-600">
+            <span className="font-semibold">📍 {report.municipalidad.nombre}</span>
+          </div>
+        )}
+
         {/* Descripción */}
         <p className="text-gray-800 text-sm mb-3 line-clamp-2">
-          {report.descripcion}
+          {report.descripcion || '🎤 Reporte con audio'}
         </p>
 
         {/* Tags */}

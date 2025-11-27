@@ -111,6 +111,24 @@ const ReportDetail = () => {
 
           {/* Contenido */}
           <div className="p-6 space-y-6">
+            {/* Municipalidad */}
+            {report.municipalidad && (
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center">
+                  📍 Municipalidad Responsable
+                </h3>
+                <div className="space-y-1">
+                  <p className="text-gray-800 font-medium">
+                    {report.municipalidad.nombre}
+                  </p>
+                  <p className="text-gray-600 text-sm">
+                    {report.municipalidad.provincia} - {report.municipalidad.canton}
+                    {report.municipalidad.distrito && `, ${report.municipalidad.distrito}`}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Descripción */}
             {report.descripcion && (
               <div>
@@ -179,6 +197,118 @@ const ReportDetail = () => {
                   <Marker position={[report.ubicacion.lat, report.ubicacion.lng]} />
                 </MapContainer>
               </div>
+            </div>
+
+            {/* Relevancia */}
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                Relevancia del Reporte
+              </h3>
+              <div className="flex items-center gap-4">
+                <button 
+                  className="flex flex-col items-center gap-1 px-4 py-3 bg-gray-50 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-green-50 hover:border-green-500 hover:text-green-700 transition"
+                >
+                  <span className="text-2xl">▲</span>
+                  <span className="text-xs font-medium">Votar positivo</span>
+                </button>
+                <div className="flex flex-col items-center">
+                  <span className="text-3xl font-bold text-gray-800">{report.puntuacion || 0}</span>
+                  <span className="text-xs text-gray-500">puntos</span>
+                </div>
+                <button 
+                  className="flex flex-col items-center gap-1 px-4 py-3 bg-gray-50 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-red-50 hover:border-red-500 hover:text-red-700 transition"
+                >
+                  <span className="text-2xl">▼</span>
+                  <span className="text-xs font-medium">Votar negativo</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Notas de la Municipalidad */}
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                🏛️ Notas de la Municipalidad
+              </h3>
+              {report.notasMunicipalidad && report.notasMunicipalidad.length > 0 ? (
+                <div className="space-y-3">
+                  {report.notasMunicipalidad.map((nota, index) => (
+                    <div key={index} className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                      <div className="flex items-start justify-between mb-2">
+                        <p className="font-semibold text-blue-900">{nota.autor || 'Municipalidad'}</p>
+                        <span className="text-xs text-blue-600">
+                          {new Date(nota.fecha).toLocaleDateString('es-CR', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-gray-700">{nota.contenido}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                  <p className="text-gray-500 text-sm">
+                    Aún no hay notas de la municipalidad sobre este reporte
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Comentarios de Usuarios */}
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                💬 Comentarios de Usuarios
+              </h3>
+              
+              {/* Formulario para agregar comentario */}
+              <div className="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <textarea
+                  placeholder="Escribe tu comentario sobre este reporte..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  rows="3"
+                ></textarea>
+                <div className="mt-2 flex justify-end">
+                  <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition font-medium">
+                    Publicar Comentario
+                  </button>
+                </div>
+              </div>
+
+              {/* Lista de comentarios */}
+              {report.comentariosUsuarios && report.comentariosUsuarios.length > 0 ? (
+                <div className="space-y-3">
+                  {report.comentariosUsuarios.map((comentario, index) => (
+                    <div key={index} className="bg-white border border-gray-200 p-4 rounded-lg">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-semibold text-gray-800">{comentario.nombreUsuario}</p>
+                          <p className="text-xs text-gray-500">Cédula: {comentario.cedula}</p>
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          {new Date(comentario.fecha).toLocaleDateString('es-CR', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-gray-700">{comentario.contenido}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                  <p className="text-gray-500 text-sm">
+                    Sé el primero en comentar sobre este reporte
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Información del Reportero */}

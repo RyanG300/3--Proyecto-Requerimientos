@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { generateId, saveReport } from '../services/reportService';
+import { asignarMunicipalidadPorCoordenadas } from '../services/municipalidadService';
 import LocationPicker from './LocationPicker';
 import Header from './Header';
 
@@ -20,6 +21,7 @@ const CreateReport = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [asignandoMunicipalidad, setAsignandoMunicipalidad] = useState(false);
   const [errors, setErrors] = useState({});
 
   // Redirigir si no hay usuario
@@ -181,7 +183,7 @@ const CreateReport = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validaciones
@@ -208,6 +210,21 @@ const CreateReport = () => {
       return;
     }
 
+    // Asignar municipalidad automáticamente según ubicación
+    setAsignandoMunicipalidad(true);
+    let municipalidad = null;
+    
+    try {
+      municipalidad = await asignarMunicipalidadPorCoordenadas(
+        formData.ubicacion.lat,
+        formData.ubicacion.lng
+      );
+    } catch (error) {
+      console.error('Error al asignar municipalidad:', error);
+    }
+    
+    setAsignandoMunicipalidad(false);
+
     // Crear reporte
     const nuevoReporte = {
       id: generateId(),
@@ -217,11 +234,14 @@ const CreateReport = () => {
       audio: tipoDescripcion === 'audio' ? formData.audio : null,
       fotos: formData.fotos,
       ubicacion: formData.ubicacion,
+      municipalidad: municipalidad,
       tags: formData.tags,
       fechaCreacion: new Date().toISOString(),
       estado: 'sin_revisar',
       puntuacion: 0,
-      votantes: []
+      votantes: [],
+      notasMunicipalidad: [], // Array de notas/comentarios de la municipalidad
+      comentariosUsuarios: [] // Array de comentarios de usuarios
     };
 
     // Guardar reporte
@@ -474,15 +494,17 @@ const CreateReport = () => {
               <button
                 type="button"
                 onClick={() => navigate('/')}
-                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition font-medium"
+                disabled={asignandoMunicipalidad}
+                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition font-medium"
+                disabled={asignandoMunicipalidad}
+                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Crear Reporte
+                {asignandoMunicipalidad ? 'Asignando municipalidad...' : 'Crear Reporte'}
               </button>
             </div>
           </form>
