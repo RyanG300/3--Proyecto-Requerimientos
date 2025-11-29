@@ -183,7 +183,7 @@ const ReportDetail = () => {
               <p className="text-gray-600 mb-3">
                 📍 {report.ubicacion.address}
               </p>
-              <div className="w-full h-64 rounded-lg overflow-hidden border border-gray-300">
+              <div className="w-full h-64 rounded-lg overflow-hidden border border-gray-300 relative z-0">
                 <MapContainer
                   center={[report.ubicacion.lat, report.ubicacion.lng]}
                   zoom={15}
