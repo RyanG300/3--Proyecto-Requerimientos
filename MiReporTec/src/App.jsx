@@ -4,9 +4,10 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import SearchBar from './components/SearchBar';
 import ReportsSection from './components/ReportsSection';
+import FuncionarioDashboard from './components/FuncionarioDashboard';
 
 function App() {
-  const { loading } = useAuth();
+  const { loading, isFuncionario } = useAuth();
 
   // Mostrar loading mientras verifica sesión
   if (loading) {
@@ -33,21 +34,41 @@ function App() {
         {/* Main Content Area */}
         <main className="flex-1 p-4 md:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
-            {/* Page Title */}
-            <div className="mb-6">
-              <h2 className="text-3xl font-bold text-gray-800 mb-2">
-                Reportes Ciudadanos
-              </h2>
-              <p className="text-gray-600">
-                Consulta y crea reportes sobre el estado de la obra pública en tu comunidad
-              </p>
-            </div>
+            {isFuncionario ? (
+              <>
+                {/* Título para funcionario */}
+                <div className="mb-6">
+                  <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                    Gestión de Reportes Municipales
+                  </h2>
+                  <p className="text-gray-600">
+                    Revisa y gestiona los reportes asociados a tu municipalidad,
+                    según su ubicación y prioridad.
+                  </p>
+                </div>
 
-            {/* Search Bar */}
-            <SearchBar />
+                {/* Panel de funcionario */}
+                <FuncionarioDashboard />
+              </>
+            ) : (
+              <>
+                {/* Título para ciudadano */}
+                <div className="mb-6">
+                  <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                    Reportes Ciudadanos
+                  </h2>
+                  <p className="text-gray-600">
+                    Consulta y crea reportes sobre el estado de la obra pública en tu comunidad
+                  </p>
+                </div>
 
-            {/* Reports Section */}
-            <ReportsSection />
+                {/* Search Bar */}
+                <SearchBar />
+
+                {/* Reports Section */}
+                <ReportsSection />
+              </>
+            )}
           </div>
         </main>
       </div>

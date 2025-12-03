@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
     
     // Buscar usuario
     const foundUser = users.find(
-      u => u.cedula === cedula && u.password === password
+      (u) => u.cedula === cedula && u.password === password
     );
 
     if (foundUser) {
@@ -37,7 +37,10 @@ export const AuthProvider = ({ children }) => {
       const userSession = {
         nombre: foundUser.nombre,
         cedula: foundUser.cedula,
-        correo: foundUser.correo
+        correo: foundUser.correo,
+        // NUEVO: rol y municipalidad
+        role: foundUser.role || 'CIUDADANO',
+        municipalidadId: foundUser.municipalidadId || null,
       };
       localStorage.setItem('currentUser', JSON.stringify(userSession));
       setUser(userSession);
@@ -53,7 +56,7 @@ export const AuthProvider = ({ children }) => {
     
     // Verificar si el usuario ya existe
     const existingUser = users.find(
-      u => u.cedula === userData.cedula || u.correo === userData.correo
+      (u) => u.cedula === userData.cedula || u.correo === userData.correo
     );
 
     if (existingUser) {
@@ -63,15 +66,24 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: 'Este correo ya está registrado' };
     }
 
+    // NUEVO: definimos el objeto que vamos a guardar
+    const newUser = {
+      ...userData,
+      role: userData.role || 'CIUDADANO',           // 'FUNCIONARIO' o 'CIUDADANO'
+      municipalidadId: userData.municipalidadId || null, // para funcionario
+    };
+
     // Agregar nuevo usuario
-    users.push(userData);
+    users.push(newUser);
     localStorage.setItem('users', JSON.stringify(users));
 
-    // Iniciar sesión automáticamente
+    // Iniciar sesión automáticamente (sin password)
     const userSession = {
-      nombre: userData.nombre,
-      cedula: userData.cedula,
-      correo: userData.correo
+      nombre: newUser.nombre,
+      cedula: newUser.cedula,
+      correo: newUser.correo,
+      role: newUser.role,
+      municipalidadId: newUser.municipalidadId,
     };
     localStorage.setItem('currentUser', JSON.stringify(userSession));
     setUser(userSession);
@@ -89,7 +101,10 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    loading
+    loading,
+    // NUEVO: helpers
+    isFuncionario: user?.role === 'FUNCIONARIO',
+    isCiudadano: user?.role === 'CIUDADANO' || !user?.role,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
