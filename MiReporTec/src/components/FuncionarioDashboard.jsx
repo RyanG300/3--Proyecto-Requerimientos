@@ -110,72 +110,90 @@ const FuncionarioDashboard = () => {
   };
 
   const handleGuardarCambios = () => {
-    if (!selectedReport || !user?.municipalidadId) return;
+  if (!selectedReport || !user?.municipalidadId) return;
 
-    setSaving(true);
-    setSaveMessage('');
+  setSaving(true);
+  setSaveMessage('');
 
-    try {
-      const allReports = JSON.parse(localStorage.getItem('reports') || '[]');
+  try {
+    const allReports = JSON.parse(localStorage.getItem('reports') || '[]');
 
-      const updatedReports = allReports.map((r) => {
-        if (r.id !== selectedReport.id) return r;
+    const updatedReports = allReports.map((r) => {
+      if (r.id !== selectedReport.id) return r;
 
-        const notasPrevias = Array.isArray(r.seguimientoNotas)
-          ? r.seguimientoNotas
-          : [];
+      // Notas internas del funcionario (historial)
+      const notasPreviasSeg = Array.isArray(r.seguimientoNotas)
+        ? r.seguimientoNotas
+        : [];
 
-        const nuevasNotas = [...notasPrevias];
+      // Notas visibles para el ciudadano en el detalle
+      const notasPreviasMuni = Array.isArray(r.notasMunicipalidad)
+        ? r.notasMunicipalidad
+        : [];
 
-        if (nuevaNota.trim() !== '') {
-          nuevasNotas.push({
-            id: crypto.randomUUID(),
-            texto: nuevaNota.trim(),
-            fecha: new Date().toISOString(),
-            autor: user.nombre,
-          });
-        }
+      const nuevasNotasSeg = [...notasPreviasSeg];
+      const nuevasNotasMuni = [...notasPreviasMuni];
 
-        return {
-          ...r,
-          estado: estadoEdit,
-          seguimientoNotas: nuevasNotas,
-        };
-      });
+      if (nuevaNota.trim() !== '') {
+        const fechaISO = new Date().toISOString();
 
-      localStorage.setItem('reports', JSON.stringify(updatedReports));
+        // Nota para el historial interno
+        nuevasNotasSeg.push({
+          id: crypto.randomUUID(),
+          texto: nuevaNota.trim(),
+          fecha: fechaISO,
+          autor: user.nombre,
+        });
 
-      // Reaplicar el filtro de municipalidad para recargar la lista
-      const target = normalizeKey(user.municipalidadId);
-      const filtered = updatedReports
-        .filter((r) => {
-          const muniKeys = getMunicipalidadKeysFromReport(r);
-          if (!muniKeys.length) return false;
+        // Nota para que la vea el ciudadano
+        nuevasNotasMuni.push({
+          autor: user.nombre,
+          fecha: fechaISO,
+          contenido: nuevaNota.trim(),
+        });
+      }
 
-          return muniKeys.some((k) => {
-            const nk = normalizeKey(k);
-            return nk && (nk.includes(target) || target.includes(nk));
-          });
-        })
-        .sort(
-          (a, b) =>
-            new Date(b.fechaCreacion || 0) - new Date(a.fechaCreacion || 0)
-        );
+      return {
+        ...r,
+        estado: estadoEdit,
+        seguimientoNotas: nuevasNotasSeg,
+        notasMunicipalidad: nuevasNotasMuni,
+      };
+    });
 
-      setReports(filtered);
+    localStorage.setItem('reports', JSON.stringify(updatedReports));
 
-      const updatedSelected = filtered.find((r) => r.id === selectedReport.id);
-      setSelectedReport(updatedSelected || null);
+    // Reaplicar el filtro de municipalidad para recargar la lista
+    const target = normalizeKey(user.municipalidadId);
+    const filtered = updatedReports
+      .filter((r) => {
+        const muniKeys = getMunicipalidadKeysFromReport(r);
+        if (!muniKeys.length) return false;
 
-      setNuevaNota('');
-      setSaveMessage('Cambios guardados correctamente.');
-    } catch (err) {
-      console.error('Error al guardar cambios del reporte', err);
-      setSaveMessage('Ocurrió un error al guardar los cambios.');
-    } finally {
-      setSaving(false);
-    }
-  };
+        return muniKeys.some((k) => {
+          const nk = normalizeKey(k);
+          return nk && (nk.includes(target) || target.includes(nk));
+        });
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.fechaCreacion || 0) - new Date(a.fechaCreacion || 0)
+      );
+
+    setReports(filtered);
+
+    const updatedSelected = filtered.find((r) => r.id === selectedReport.id);
+    setSelectedReport(updatedSelected || null);
+
+    setNuevaNota('');
+    setSaveMessage('Cambios guardados correctamente.');
+  } catch (err) {
+    console.error('Error al guardar cambios del reporte', err);
+    setSaveMessage('Ocurrió un error al guardar los cambios.');
+  } finally {
+    setSaving(false);
+  }
+};
 
   const formatearFecha = (iso) => {
     if (!iso) return '';

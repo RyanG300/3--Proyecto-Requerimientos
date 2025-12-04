@@ -98,16 +98,35 @@ const ReportDetail = () => {
     );
   }
 
-  const getEstadoBadge = (estado) => {
-    const badges = {
-      sin_revisar: { text: 'Sin Revisar', color: 'bg-gray-100 text-gray-800' },
-      en_revision: { text: 'En Revisión', color: 'bg-yellow-100 text-yellow-800' },
-      en_proceso: { text: 'En Proceso', color: 'bg-blue-100 text-blue-800' },
-      resuelto: { text: 'Resuelto', color: 'bg-green-100 text-green-800' },
-      rechazado: { text: 'Rechazado', color: 'bg-red-100 text-red-800' }
-    };
-    return badges[estado] || badges.sin_revisar;
+  // ...arriba del componente, deja todo igual
+
+const getEstadoBadge = (estadoRaw) => {
+  const raw = (estadoRaw || '').toString().toLowerCase().trim();
+  const key = raw.replace(/\s+/g, '_'); // "En Proceso" -> "en_proceso"
+
+  const badges = {
+    sin_revisar: { text: 'Sin Revisar', color: 'bg-gray-100 text-gray-800' },
+    pendiente:   { text: 'Sin Revisar', color: 'bg-gray-100 text-gray-800' }, // alias
+    en_revision: { text: 'En Revisión', color: 'bg-yellow-100 text-yellow-800' },
+    en_proceso:  { text: 'En Proceso',  color: 'bg-blue-100 text-blue-800' },
+    resuelto:    { text: 'Resuelto',    color: 'bg-green-100 text-green-800' },
+    rechazado:   { text: 'Rechazado',   color: 'bg-red-100 text-red-800' },
   };
+
+  // Coincidencia exacta con la clave
+  if (badges[key]) return badges[key];
+
+  // Fallback por contenido del texto
+  if (raw.includes('pendiente')) return badges.pendiente;
+  if (raw.includes('proceso'))   return badges.en_proceso;
+  if (raw.includes('revisión') || raw.includes('revision')) return badges.en_revision;
+  if (raw.includes('resuelto'))  return badges.resuelto;
+  if (raw.includes('rechazado')) return badges.rechazado;
+
+  // Default
+  return badges.sin_revisar;
+};
+
 
   const badge = getEstadoBadge(report.estado);
   const fecha = new Date(report.fechaCreacion).toLocaleDateString('es-CR', {
