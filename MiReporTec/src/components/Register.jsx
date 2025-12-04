@@ -8,6 +8,14 @@ import {
   validarPassword
 } from '../utils/validations';
 
+// Puedes agregar/editar las municipalidades que necesites
+const MUNICIPALIDADES = [
+  { id: 'SAN_RAMON', nombre: 'Municipalidad de San Ramón' },
+  { id: 'ALAJUELA', nombre: 'Municipalidad de Alajuela' },
+  { id: 'PALMARES', nombre: 'Municipalidad de Palmares' },
+  { id: 'OTRO', nombre: 'Otra municipalidad' },
+];
+
 const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -16,7 +24,9 @@ const Register = () => {
     cedula: '',
     correo: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: 'CIUDADANO',      // NUEVO: tipo de usuario
+    municipalidadId: '',    // NUEVO: municipalidad del funcionario
   });
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState('');
@@ -27,7 +37,7 @@ const Register = () => {
       ...prev,
       [name]: value
     }));
-    // Limpiar error del campo al escribir
+
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -37,7 +47,6 @@ const Register = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Validaciones
     const newErrors = {};
     
     const nombreValidation = validarNombre(formData.nombre);
@@ -64,6 +73,11 @@ const Register = () => {
       newErrors.confirmPassword = 'Las contraseñas no coinciden';
     }
 
+    // NUEVO: si es funcionario, debe elegir municipalidad
+    if (formData.role === 'FUNCIONARIO' && !formData.municipalidadId) {
+      newErrors.municipalidadId = 'Debes seleccionar la municipalidad donde trabajas';
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -74,10 +88,13 @@ const Register = () => {
       nombre: formData.nombre.trim(),
       cedula: formData.cedula.replace(/[\s-]/g, ''),
       correo: formData.correo.trim(),
-      password: formData.password
+      password: formData.password,
+      role: formData.role,
+      municipalidadId: formData.role === 'FUNCIONARIO'
+        ? formData.municipalidadId
+        : null,
     };
 
-    // Intentar registro
     const result = register(userData);
     
     if (!result.success) {
@@ -136,7 +153,7 @@ const Register = () => {
               <p className="text-red-500 text-xs mt-1">{errors.cedula}</p>
             )}
             <p className="text-xs text-gray-500 mt-1">
-              Cédula costarricense 
+              Cédula costarricense
             </p>
           </div>
 
@@ -160,6 +177,65 @@ const Register = () => {
               <p className="text-red-500 text-xs mt-1">{errors.correo}</p>
             )}
           </div>
+
+          {/* Tipo de usuario */}
+          <div>
+            <span className="block text-sm font-medium text-gray-700 mb-1">
+              Tipo de cuenta
+            </span>
+            <div className="flex gap-4">
+              <label className="flex items-center text-sm">
+                <input
+                  type="radio"
+                  name="role"
+                  value="CIUDADANO"
+                  checked={formData.role === 'CIUDADANO'}
+                  onChange={handleChange}
+                  className="mr-2"
+                />
+                Ciudadano
+              </label>
+              <label className="flex items-center text-sm">
+                <input
+                  type="radio"
+                  name="role"
+                  value="FUNCIONARIO"
+                  checked={formData.role === 'FUNCIONARIO'}
+                  onChange={handleChange}
+                  className="mr-2"
+                />
+                Funcionario municipal
+              </label>
+            </div>
+          </div>
+
+          {/* Municipalidad (solo si es funcionario) */}
+          {formData.role === 'FUNCIONARIO' && (
+            <div>
+              <label htmlFor="municipalidadId" className="block text-sm font-medium text-gray-700 mb-1">
+                Municipalidad donde trabajas
+              </label>
+              <select
+                id="municipalidadId"
+                name="municipalidadId"
+                value={formData.municipalidadId}
+                onChange={handleChange}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.municipalidadId ? 'border-red-500' : 'border-gray-300'
+                }`}
+              >
+                <option value="">Selecciona una opción</option>
+                {MUNICIPALIDADES.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.nombre}
+                  </option>
+                ))}
+              </select>
+              {errors.municipalidadId && (
+                <p className="text-red-500 text-xs mt-1">{errors.municipalidadId}</p>
+              )}
+            </div>
+          )}
 
           {/* Contraseña */}
           <div>
@@ -203,14 +279,12 @@ const Register = () => {
             )}
           </div>
 
-          {/* Mensaje de error general */}
           {message && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
               {message}
             </div>
           )}
 
-          {/* Botón de submit */}
           <button
             type="submit"
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200 font-medium"
@@ -219,7 +293,6 @@ const Register = () => {
           </button>
         </form>
 
-        {/* Link a login */}
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             ¿Ya tienes cuenta?{' '}

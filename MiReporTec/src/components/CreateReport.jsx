@@ -213,12 +213,33 @@ const CreateReport = () => {
     // Asignar municipalidad automáticamente según ubicación
     setAsignandoMunicipalidad(true);
     let municipalidad = null;
+    let municipalidadId = null;
+    let municipalidadNombre = null;
     
     try {
       municipalidad = await asignarMunicipalidadPorCoordenadas(
         formData.ubicacion.lat,
         formData.ubicacion.lng
       );
+
+      // Soportar varios formatos de respuesta:
+      // - "SAN_RAMON"
+      // - { id: 'SAN_RAMON', nombre: 'Municipalidad de San Ramón', ... }
+      if (typeof municipalidad === 'string') {
+        municipalidadId = municipalidad;
+      } else if (municipalidad) {
+        municipalidadId =
+          municipalidad.id ||
+          municipalidad.codigo ||
+          municipalidad.clave ||
+          municipalidad.nombre ||
+          null;
+
+        municipalidadNombre =
+          municipalidad.nombre ||
+          municipalidad.etiqueta ||
+          null;
+      }
     } catch (error) {
       console.error('Error al asignar municipalidad:', error);
     }
@@ -234,14 +255,25 @@ const CreateReport = () => {
       audio: tipoDescripcion === 'audio' ? formData.audio : null,
       fotos: formData.fotos,
       ubicacion: formData.ubicacion,
-      municipalidad: municipalidad,
+
+      // Información de municipalidad
+      municipalidadId: municipalidadId,          // usado por el panel del funcionario
+      municipalidadNombre: municipalidadNombre,  // texto opcional para mostrar
+      municipalidadRaw: municipalidad || null,   // objeto completo por si se ocupa
+
       tags: formData.tags,
       fechaCreacion: new Date().toISOString(),
-      estado: 'sin_revisar',
+
+      // Estado inicial normalizado
+      estado: 'Pendiente',        // antes: 'sin_revisar'
+      prioridad: 'Media',
       puntuacion: 0,
       votantes: [],
-      notasMunicipalidad: [], // Array de notas/comentarios de la municipalidad
-      comentariosUsuarios: [] // Array de comentarios de usuarios
+
+      // Seguimiento
+      notasMunicipalidad: [],
+      comentariosUsuarios: [],
+      seguimientoNotas: [],       // para notas del funcionario
     };
 
     // Guardar reporte
