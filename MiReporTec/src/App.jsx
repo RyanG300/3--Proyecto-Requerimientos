@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from './context/AuthContext';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -8,6 +8,15 @@ import FuncionarioDashboard from './components/FuncionarioDashboard';
 
 function App() {
   const { loading, isFuncionario } = useAuth();
+  const [searchFilters, setSearchFilters] = useState({
+    searchTerm: '',
+    location: '',
+    municipality: ''
+  });
+
+  const handleSearch = (filters) => {
+    setSearchFilters(filters);
+  };
 
   // Mostrar loading mientras verifica sesión
   if (loading) {
@@ -63,10 +72,10 @@ function App() {
                 </div>
 
                 {/* Search Bar */}
-                <SearchBar />
+                <SearchBar onSearch={handleSearch} filters={searchFilters} />
 
                 {/* Reports Section */}
-                <ReportsSection />
+                <ReportsSection filters={searchFilters} />
               </>
             )}
           </div>

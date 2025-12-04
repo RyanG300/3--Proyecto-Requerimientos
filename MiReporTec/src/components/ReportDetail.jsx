@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
-import { getReportById } from '../services/reportService';
+import { getReportById, voteReport, addComment } from '../services/reportService';
+import { useAuth } from '../context/AuthContext';
 import Header from './Header';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -17,7 +18,11 @@ L.Icon.Default.mergeOptions({
 const ReportDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [report, setReport] = useState(null);
+  const [nuevoComentario, setNuevoComentario] = useState('');
+  const [votando, setVotando] = useState(false);
+  const [comentando, setComentando] = useState(false);
 
   useEffect(() => {
     const foundReport = getReportById(id);
@@ -27,6 +32,63 @@ const ReportDetail = () => {
       navigate('/');
     }
   }, [id, navigate]);
+
+  // Obtener el voto actual del usuario
+  const getVotoUsuario = () => {
+    if (!user || !report?.votantes) return null;
+    const votoExistente = report.votantes.find(v => v.userId === user.cedula);
+    return votoExistente ? votoExistente.voto : null;
+  };
+
+  // Manejar votación
+  const handleVote = async (voto) => {
+    if (!user) {
+      alert('Debes iniciar sesión para votar');
+      return;
+    }
+    
+    setVotando(true);
+    const resultado = voteReport(report.id, user.cedula, voto);
+    
+    if (resultado.success) {
+      // Recargar el reporte para obtener los datos actualizados
+      const updatedReport = getReportById(id);
+      setReport(updatedReport);
+    }
+    setVotando(false);
+  };
+
+  // Manejar envío de comentario
+  const handleSubmitComentario = () => {
+    if (!user) {
+      alert('Debes iniciar sesión para comentar');
+      return;
+    }
+    
+    if (!nuevoComentario.trim()) {
+      alert('El comentario no puede estar vacío');
+      return;
+    }
+
+    setComentando(true);
+    const resultado = addComment(report.id, {
+      nombreUsuario: user.nombre,
+      cedula: user.cedula,
+      contenido: nuevoComentario.trim()
+    });
+
+    if (resultado.success) {
+      // Recargar el reporte para obtener los comentarios actualizados
+      const updatedReport = getReportById(id);
+      setReport(updatedReport);
+      setNuevoComentario('');
+    } else {
+      alert('Error al publicar el comentario');
+    }
+    setComentando(false);
+  };
+
+  const votoUsuario = getVotoUsuario();
 
   if (!report) {
     return (
@@ -206,22 +268,51 @@ const ReportDetail = () => {
               </h3>
               <div className="flex items-center gap-4">
                 <button 
-                  className="flex flex-col items-center gap-1 px-4 py-3 bg-gray-50 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-green-50 hover:border-green-500 hover:text-green-700 transition"
+                  onClick={() => handleVote(1)}
+                  disabled={votando || !user}
+                  className={`flex flex-col items-center gap-1 px-4 py-3 border-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${
+                    votoUsuario === 1 
+                      ? 'bg-green-100 border-green-500 text-green-700' 
+                      : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-green-50 hover:border-green-500 hover:text-green-700'
+                  }`}
+                  title={!user ? 'Inicia sesión para votar' : votoUsuario === 1 ? 'Quitar voto' : 'Votar positivo'}
                 >
                   <span className="text-2xl">▲</span>
-                  <span className="text-xs font-medium">Votar positivo</span>
+                  <span className="text-xs font-medium">{votoUsuario === 1 ? 'Votado +' : 'Votar +'}</span>
                 </button>
                 <div className="flex flex-col items-center">
-                  <span className="text-3xl font-bold text-gray-800">{report.puntuacion || 0}</span>
+                  <span className={`text-3xl font-bold ${
+                    (report.puntuacion || 0) > 0 ? 'text-green-600' : 
+                    (report.puntuacion || 0) < 0 ? 'text-red-600' : 'text-gray-800'
+                  }`}>
+                    {report.puntuacion || 0}
+                  </span>
                   <span className="text-xs text-gray-500">puntos</span>
                 </div>
                 <button 
-                  className="flex flex-col items-center gap-1 px-4 py-3 bg-gray-50 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-red-50 hover:border-red-500 hover:text-red-700 transition"
+                  onClick={() => handleVote(-1)}
+                  disabled={votando || !user}
+                  className={`flex flex-col items-center gap-1 px-4 py-3 border-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${
+                    votoUsuario === -1 
+                      ? 'bg-red-100 border-red-500 text-red-700' 
+                      : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-red-50 hover:border-red-500 hover:text-red-700'
+                  }`}
+                  title={!user ? 'Inicia sesión para votar' : votoUsuario === -1 ? 'Quitar voto' : 'Votar negativo'}
                 >
                   <span className="text-2xl">▼</span>
-                  <span className="text-xs font-medium">Votar negativo</span>
+                  <span className="text-xs font-medium">{votoUsuario === -1 ? 'Votado -' : 'Votar -'}</span>
                 </button>
               </div>
+              {!user && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Inicia sesión para poder votar en este reporte
+                </p>
+              )}
+              {report.votantes && report.votantes.length > 0 && (
+                <p className="text-xs text-gray-400 mt-2">
+                  {report.votantes.length} {report.votantes.length === 1 ? 'usuario ha votado' : 'usuarios han votado'}
+                </p>
+              )}
             </div>
 
             {/* Notas de la Municipalidad */}
@@ -262,31 +353,65 @@ const ReportDetail = () => {
             <div className="border-t border-gray-200 pt-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
                 💬 Comentarios de Usuarios
+                {report.comentariosUsuarios && report.comentariosUsuarios.length > 0 && (
+                  <span className="text-sm font-normal text-gray-500">
+                    ({report.comentariosUsuarios.length})
+                  </span>
+                )}
               </h3>
               
               {/* Formulario para agregar comentario */}
-              <div className="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <textarea
-                  placeholder="Escribe tu comentario sobre este reporte..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                  rows="3"
-                ></textarea>
-                <div className="mt-2 flex justify-end">
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition font-medium">
-                    Publicar Comentario
-                  </button>
+              {user ? (
+                <div className="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      {user.nombre.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-sm font-medium text-gray-700">{user.nombre}</span>
+                  </div>
+                  <textarea
+                    value={nuevoComentario}
+                    onChange={(e) => setNuevoComentario(e.target.value)}
+                    placeholder="Escribe tu comentario sobre este reporte..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    rows="3"
+                    disabled={comentando}
+                  ></textarea>
+                  <div className="mt-2 flex justify-between items-center">
+                    <span className="text-xs text-gray-400">
+                      {nuevoComentario.length}/500 caracteres
+                    </span>
+                    <button 
+                      onClick={handleSubmitComentario}
+                      disabled={comentando || !nuevoComentario.trim()}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {comentando ? 'Publicando...' : 'Publicar Comentario'}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+                  <p className="text-yellow-700 text-sm">
+                    Inicia sesión para poder comentar en este reporte
+                  </p>
+                </div>
+              )}
 
               {/* Lista de comentarios */}
               {report.comentariosUsuarios && report.comentariosUsuarios.length > 0 ? (
                 <div className="space-y-3">
                   {report.comentariosUsuarios.map((comentario, index) => (
-                    <div key={index} className="bg-white border border-gray-200 p-4 rounded-lg">
+                    <div key={comentario.id || index} className="bg-white border border-gray-200 p-4 rounded-lg">
                       <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <p className="font-semibold text-gray-800">{comentario.nombreUsuario}</p>
-                          <p className="text-xs text-gray-500">Cédula: {comentario.cedula}</p>
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                            {comentario.nombreUsuario.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-800">{comentario.nombreUsuario}</p>
+                            <p className="text-xs text-gray-500">Cédula: {comentario.cedula}</p>
+                          </div>
                         </div>
                         <span className="text-xs text-gray-500">
                           {new Date(comentario.fecha).toLocaleDateString('es-CR', {
@@ -298,7 +423,7 @@ const ReportDetail = () => {
                           })}
                         </span>
                       </div>
-                      <p className="text-gray-700">{comentario.contenido}</p>
+                      <p className="text-gray-700 ml-10">{comentario.contenido}</p>
                     </div>
                   ))}
                 </div>

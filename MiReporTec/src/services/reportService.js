@@ -134,3 +134,88 @@ export const getUserReports = (cedula) => {
   return reports.filter(report => report.cedula === cedula)
     .sort((a, b) => new Date(b.fechaCreacion) - new Date(a.fechaCreacion));
 };
+
+// Agregar comentario a un reporte
+export const addComment = (reportId, comentario) => {
+  try {
+    const reports = getReports();
+    const index = reports.findIndex(report => report.id === reportId);
+    if (index !== -1) {
+      if (!reports[index].comentariosUsuarios) {
+        reports[index].comentariosUsuarios = [];
+      }
+      reports[index].comentariosUsuarios.push({
+        ...comentario,
+        id: generateId(),
+        fecha: new Date().toISOString()
+      });
+      localStorage.setItem('reports', JSON.stringify(reports));
+      return { success: true, comentarios: reports[index].comentariosUsuarios };
+    }
+    return { success: false };
+  } catch (error) {
+    console.error('Error al agregar comentario:', error);
+    return { success: false };
+  }
+};
+
+// Buscar reportes con filtros
+export const searchReports = (filters) => {
+  const reports = getReports();
+  let filtered = [...reports];
+
+  // Filtrar por término de búsqueda (descripción, tags, ID)
+  if (filters.searchTerm && filters.searchTerm.trim()) {
+    const term = filters.searchTerm.toLowerCase().trim();
+    filtered = filtered.filter(report => 
+      (report.descripcion && report.descripcion.toLowerCase().includes(term)) ||
+      (report.id && report.id.toLowerCase().includes(term)) ||
+      (report.tags && report.tags.some(tag => tag.toLowerCase().includes(term))) ||
+      (report.ubicacion?.address && report.ubicacion.address.toLowerCase().includes(term))
+    );
+  }
+
+  // Filtrar por ubicación (provincia)
+  if (filters.location && filters.location.trim()) {
+    const loc = filters.location.toLowerCase().trim();
+    filtered = filtered.filter(report =>
+      (report.municipalidad?.provincia && report.municipalidad.provincia.toLowerCase().includes(loc)) ||
+      (report.ubicacion?.address && report.ubicacion.address.toLowerCase().includes(loc))
+    );
+  }
+
+  // Filtrar por municipalidad
+  if (filters.municipality && filters.municipality.trim()) {
+    const muni = filters.municipality.toLowerCase().trim();
+    filtered = filtered.filter(report =>
+      report.municipalidad?.nombre && report.municipalidad.nombre.toLowerCase().includes(muni)
+    );
+  }
+
+  // Ordenar por fecha (más reciente primero)
+  return filtered.sort((a, b) => new Date(b.fechaCreacion) - new Date(a.fechaCreacion));
+};
+
+// Obtener todas las municipalidades únicas de los reportes
+export const getUniqueMunicipalities = () => {
+  const reports = getReports();
+  const municipalities = new Set();
+  reports.forEach(report => {
+    if (report.municipalidad?.nombre) {
+      municipalities.add(report.municipalidad.nombre);
+    }
+  });
+  return Array.from(municipalities).sort();
+};
+
+// Obtener todas las provincias únicas de los reportes
+export const getUniqueProvinces = () => {
+  const reports = getReports();
+  const provinces = new Set();
+  reports.forEach(report => {
+    if (report.municipalidad?.provincia) {
+      provinces.add(report.municipalidad.provincia);
+    }
+  });
+  return Array.from(provinces).sort();
+};
