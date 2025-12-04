@@ -8,13 +8,8 @@ import {
   validarPassword
 } from '../utils/validations';
 
-// Puedes agregar/editar las municipalidades que necesites
-const MUNICIPALIDADES = [
-  { id: 'SAN_RAMON', nombre: 'Municipalidad de San Ramón' },
-  { id: 'ALAJUELA', nombre: 'Municipalidad de Alajuela' },
-  { id: 'PALMARES', nombre: 'Municipalidad de Palmares' },
-  { id: 'OTRO', nombre: 'Otra municipalidad' },
-];
+// 🔹 Importamos el JSON con TODAS las municipalidades
+import municipalidadesData from '../Jsons/municipalidades.json';
 
 const Register = () => {
   const { register } = useAuth();
@@ -25,8 +20,8 @@ const Register = () => {
     correo: '',
     password: '',
     confirmPassword: '',
-    role: 'CIUDADANO',      // NUEVO: tipo de usuario
-    municipalidadId: '',    // NUEVO: municipalidad del funcionario
+    role: 'CIUDADANO',      // tipo de usuario
+    municipalidadId: ''     // municipalidad del funcionario (guardará el nombre)
   });
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState('');
@@ -73,7 +68,7 @@ const Register = () => {
       newErrors.confirmPassword = 'Las contraseñas no coinciden';
     }
 
-    // NUEVO: si es funcionario, debe elegir municipalidad
+    // Si es funcionario, debe elegir municipalidad
     if (formData.role === 'FUNCIONARIO' && !formData.municipalidadId) {
       newErrors.municipalidadId = 'Debes seleccionar la municipalidad donde trabajas';
     }
@@ -90,6 +85,7 @@ const Register = () => {
       correo: formData.correo.trim(),
       password: formData.password,
       role: formData.role,
+      // aquí municipalidadId será el NOMBRE de la muni seleccionada
       municipalidadId: formData.role === 'FUNCIONARIO'
         ? formData.municipalidadId
         : null,
@@ -225,10 +221,19 @@ const Register = () => {
                 }`}
               >
                 <option value="">Selecciona una opción</option>
-                {MUNICIPALIDADES.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.nombre}
-                  </option>
+
+                {/* 🔹 Recorremos provincias y municipalidades desde el JSON */}
+                {municipalidadesData.municipalidades.map((provincia) => (
+                  <optgroup
+                    key={provincia.provincia}
+                    label={provincia.provincia}
+                  >
+                    {provincia.municipalidades.map((m) => (
+                      <option key={m.nombre} value={m.nombre}>
+                        {m.nombre}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
               {errors.municipalidadId && (
